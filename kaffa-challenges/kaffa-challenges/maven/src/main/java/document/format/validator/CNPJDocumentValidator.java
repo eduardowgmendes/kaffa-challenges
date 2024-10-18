@@ -18,6 +18,7 @@ public final class CNPJDocumentValidator implements DocumentValidator {
      * @return true if valid, false otherwise
      * @throws IllegalArgumentException if the document is null
      */
+    @Override
     public boolean isValid() {
 
         if (document == null) throw new IllegalArgumentException("document cannot be null!");
@@ -75,6 +76,7 @@ public final class CNPJDocumentValidator implements DocumentValidator {
      * @return true if it is, false otherwise
      * @throws IllegalArgumentException if the document is null
      */
+    @Override
     public boolean matchesPattern(String pattern) {
         if (document == null) throw new IllegalArgumentException("document cannot be null!");
         return document.matches(pattern);
