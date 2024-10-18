@@ -1,6 +1,12 @@
 package document.format.validator;
 
-public final class DocumentValidatorUtils {
+public final class CNPJDocumentValidator implements DocumentValidator {
+
+    private String document;
+
+    public CNPJDocumentValidator(String document) {
+        this.document = document;
+    }
 
     /**
      * Checks the validity of a document through three special conditions:
@@ -9,11 +15,10 @@ public final class DocumentValidatorUtils {
      * - The document has fourteen digits
      * - The document contains all identical digits
      *
-     * @param document
      * @return true if valid, false otherwise
      * @throws IllegalArgumentException if the document is null
      */
-    public static boolean isValid(String document) {
+    public boolean isValid() {
 
         if (document == null) throw new IllegalArgumentException("document cannot be null!");
 
@@ -21,14 +26,14 @@ public final class DocumentValidatorUtils {
 
         if (document.isEmpty()) return false;
 
-        if (hasAllDigits(document)) return false;
+        if (hasAllDigits()) return false;
 
-        if (allDigitsAreSame(document)) return false;
+        if (allDigitsAreSame()) return false;
 
         String baseDocument = document.substring(0, 12);
 
-        int firstCheckDigit = DigitWeights.evaluateCheckDigits(baseDocument, DigitWeights.FIRST_DIGIT_WEIGHTS);
-        int secondCheckDigit = DigitWeights.evaluateCheckDigits(baseDocument + firstCheckDigit, DigitWeights.SECOND_DIGIT_WEIGHTS);
+        int firstCheckDigit = DigitWeightsUtils.evaluateCheckDigits(baseDocument, DigitWeightsUtils.FIRST_DIGIT_WEIGHTS);
+        int secondCheckDigit = DigitWeightsUtils.evaluateCheckDigits(baseDocument + firstCheckDigit, DigitWeightsUtils.SECOND_DIGIT_WEIGHTS);
 
         return document.equals(baseDocument + firstCheckDigit + secondCheckDigit);
     }
@@ -36,20 +41,18 @@ public final class DocumentValidatorUtils {
     /**
      * Checks if the document has the correct length of 14 digits.
      *
-     * @param document the document to be validated
      * @return true if the document does not have exactly 14 characters, false otherwise
      */
-    private static boolean hasAllDigits(String document) {
+    private boolean hasAllDigits() {
         return document.length() != 14;
     }
 
     /**
      * Checks if all digits in the document are the same.
      *
-     * @param document the document to be validated
      * @return true if all digits in the document are identical, false otherwise
      */
-    private static boolean allDigitsAreSame(String document) {
+    private boolean allDigitsAreSame() {
         return document.matches("(\\d)\\1{13}");
     }
 
@@ -69,13 +72,12 @@ public final class DocumentValidatorUtils {
      * DocumentPatterns.CNPJ_NUMBERS_AND_SYMBOLS
      * Accepts only - 00.000.000/0000-00
      *
-     * @param document
      * @return true if it is, false otherwise
      * @throws IllegalArgumentException if the document is null
      */
-    public static boolean isCNPJ(String document, String documentPattern) {
+    public boolean matchesPattern(String pattern) {
         if (document == null) throw new IllegalArgumentException("document cannot be null!");
-        return document.matches(documentPattern);
+        return document.matches(pattern);
     }
 
 }

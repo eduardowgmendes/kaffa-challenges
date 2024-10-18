@@ -1,6 +1,6 @@
 package document.format.validator;
 
-public class DigitWeights {
+public class DigitWeightsUtils {
 
     public static final int[] FIRST_DIGIT_WEIGHTS = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
     public static final int[] SECOND_DIGIT_WEIGHTS = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
