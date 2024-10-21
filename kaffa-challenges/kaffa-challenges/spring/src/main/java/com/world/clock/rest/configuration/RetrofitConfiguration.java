@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.util.concurrent.TimeUnit;
+
 @Configuration
 public class RetrofitConfiguration {
 
@@ -16,10 +18,17 @@ public class RetrofitConfiguration {
 
     @Bean
     public Retrofit retrofit() {
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(2, TimeUnit.MINUTES)
+                .readTimeout(2, TimeUnit.MINUTES)
+                .writeTimeout(2, TimeUnit.MINUTES)
+                .build();
+
         return new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(JacksonConverterFactory.create())
-                .client(new OkHttpClient.Builder().build())
+                .client(okHttpClient)
                 .build();
     }
 

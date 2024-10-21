@@ -2,6 +2,7 @@ package com.world.clock.rest.resources;
 
 import com.world.clock.database.shared.entity.TimeEntity;
 import com.world.clock.rest.client.WorldClockService;
+import com.world.clock.rest.client.shared.dto.TimeDTO;
 import com.world.clock.rest.client.shared.response.WorldClockResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,21 +24,20 @@ public class TimeService {
     @Autowired
     private WorldClockService worldClockService;
 
-    public void fetchCurrentTime() throws IOException {
+    public TimeDTO fetchCurrentTime() throws IOException {
         Call<WorldClockResponse> call = worldClockService.getCurrentTime();
         Response<WorldClockResponse> response = call.execute();
 
         if (response.isSuccessful() && response.body() != null) {
             TimeEntity timeEntity = readBodyOf(response);
-            if (timeEntity != null) {
+            if (timeEntity != null)
                 timeRepository.save(timeEntity);
-                LOGGER.info("saved {} on database", timeEntity);
-            } else {
-                LOGGER.error("timeUnit is null");
-            }
+            return TimeDTO.from(timeEntity);
         } else {
             LOGGER.info("failed to obtain data from WorldClock API");
         }
+
+        return null;
     }
 
     private static TimeEntity readBodyOf(Response<WorldClockResponse> response) {
@@ -54,6 +54,6 @@ public class TimeService {
         }
 
         return null;
-
     }
+
 }

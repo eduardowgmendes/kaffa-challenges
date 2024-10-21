@@ -1,7 +1,9 @@
 package com.world.clock.database.shared.entity;
 
+import com.world.clock.rest.client.shared.dto.TimeDTO;
 import jakarta.persistence.*;
 import lombok.*;
+import org.modelmapper.ModelMapper;
 
 
 @Getter
@@ -31,4 +33,9 @@ public class TimeEntity {
 
     @Column(name = "time_zone_name")
     private String timeZoneName;
+
+    public static TimeEntity from(TimeDTO timeDTO) {
+        return new ModelMapper().map(timeDTO, TimeEntity.class);
+    }
+
 }
