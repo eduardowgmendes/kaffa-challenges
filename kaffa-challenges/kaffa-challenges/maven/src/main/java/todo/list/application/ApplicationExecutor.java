@@ -14,8 +14,6 @@ public class ApplicationExecutor {
         new DefaultFlywayConfiguration()
                 .migrate();
 
-        SimpleTodoListApplication applicationBackend = new SimpleTodoListApplication(new SimpleTaskRepository(DefaultConfiguration.getEntityManager()));
-
-        SwingUtilities.invokeLater(() -> new ApplicationUI(applicationBackend));
+        SwingUtilities.invokeLater(() -> new ApplicationUI(new SimpleTodoListApplication(new SimpleTaskRepository(DefaultConfiguration.getEntityManager()))));
     }
 }
