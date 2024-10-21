@@ -3,13 +3,18 @@ package todo.list.application.database.repository;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Transactional
-public interface SimpleRepository<T> {
+public interface SimpleCrudRepository<T> {
 
     List<T> findAll();
 
-    T findById(long id);
+    Optional<T> findById(long id);
+
+    T save(T t);
+
+    T update(T t);
 
     T saveOrUpdate(T t);
 

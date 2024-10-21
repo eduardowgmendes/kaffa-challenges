@@ -47,7 +47,7 @@ public class TaskEntity {
     private boolean erased;
 
     @ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "tags", joinColumns = @JoinColumn(name = "taskId"))
+    @CollectionTable(name = "tags", joinColumns = @JoinColumn(name = "task_id"))
     @Column(name = "tag", nullable = false)
     private List<String> tags = new ArrayList<>();
 
@@ -76,7 +76,8 @@ public class TaskEntity {
     @Convert(converter = LocalDateTimeConverter.class)
     private LocalDateTime completedAt;
 
-    public static TaskEntity create(Task task) {
+    public static TaskEntity from(Task task) {
+        if (task == null) return null;
         return new ModelMapper().map(task, TaskEntity.class);
     }
 

@@ -1,5 +1,6 @@
 package todo.list.application;
 
+import jakarta.transaction.Transactional;
 import todo.list.application.database.repository.SimpleTaskRepository;
 import todo.list.application.database.shared.entity.TaskEntity;
 import todo.list.application.domain.Task;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Transactional
 public class SimpleTodoListApplication implements BasicPersistentDataApplication<Task> {
 
     private final SimpleTaskRepository simpleTaskRepository;
@@ -23,20 +25,20 @@ public class SimpleTodoListApplication implements BasicPersistentDataApplication
         if (allTasksFound.isEmpty()) return null;
 
         return allTasksFound.stream()
-                .map(Task::create)
+                .map(Task::from)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Task create(Task task) {
         Objects.requireNonNull(task, "task cannot be null");
-        return Task.create(simpleTaskRepository.saveOrUpdate(TaskEntity.create(task)));
+        return Task.from(simpleTaskRepository.saveOrUpdate(TaskEntity.from(task)));
     }
 
     @Override
     public Task update(Task task) {
         Objects.requireNonNull(task, "task cannot be null");
-        return Task.create(simpleTaskRepository.saveOrUpdate(TaskEntity.create(task)));
+        return Task.from(simpleTaskRepository.saveOrUpdate(TaskEntity.from(task)));
     }
 
     @Override
@@ -49,6 +51,10 @@ public class SimpleTodoListApplication implements BasicPersistentDataApplication
     public void deleteThese(List<Task> tasks) {
         Objects.requireNonNull(tasks, "task list cannot be null");
         tasks.forEach(this::delete);
+    }
+
+    public void deleteById(long id) {
+        simpleTaskRepository.deleteById(id);
     }
 
     @Override

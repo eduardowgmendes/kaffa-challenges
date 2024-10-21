@@ -6,39 +6,115 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import todo.list.application.database.configuration.JPAConfiguration;
 import todo.list.application.database.shared.entity.TaskEntity;
 import todo.list.application.database.shared.enums.Status;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Transactional
-public class SimpleTaskRepository implements SimpleRepository<TaskEntity> {
+public class SimpleTaskRepository implements SimpleCrudRepository<TaskEntity> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("SimpleTaskRepository");
 
-    private final EntityManager entityManager = JPAConfiguration.getEntityManager();
+    private final EntityManager entityManager;
+
+    public SimpleTaskRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<TaskEntity> findAll() {
         List<TaskEntity> tasksFound = new ArrayList<>();
+
         try {
-            TypedQuery<TaskEntity> query = entityManager.createQuery("SELECT t FROM TaskEntity T", TaskEntity.class);
+            TypedQuery<TaskEntity> query = entityManager.createQuery("SELECT t FROM TaskEntity t", TaskEntity.class);
             tasksFound = query.getResultList();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-        } finally {
-            entityManager.close();
         }
+
         return tasksFound;
     }
 
     @Override
-    public TaskEntity findById(long id) {
-        return entityManager.find(TaskEntity.class, id);
+    public Optional<TaskEntity> findById(long id) {
+        return Optional.ofNullable(entityManager.find(TaskEntity.class, id));
+    }
+
+    @Override
+    public TaskEntity save(TaskEntity task) {
+
+        if (task == null)
+            throw new IllegalArgumentException("task cannot be null");
+
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        try {
+            transaction.begin();
+            task.setStatus(Status.RUNNING);
+            task.setCreatedAt(LocalDateTime.now());
+            entityManager.persist(task);
+            transaction.commit();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+        }
+
+        return task;
+    }
+
+    @Override
+    public TaskEntity update(TaskEntity task) {
+
+        if (task == null) throw new IllegalArgumentException("task cannot be null");
+
+        Optional<TaskEntity> optionalTask = findById(task.getId());
+
+        if (optionalTask.isEmpty())
+            throw new IllegalArgumentException("task not found to be updated");
+
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        TaskEntity taskFound = optionalTask.get();
+
+        try {
+            transaction.begin();
+            TaskEntity taskToBeUpdated = exchangeData(task, taskFound);
+            task = entityManager.merge(taskToBeUpdated);
+            transaction.commit();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+        }
+
+        return task;
+    }
+
+    private TaskEntity exchangeData(TaskEntity oldTask, TaskEntity newTask) {
+
+        if (oldTask == null || newTask == null) return null;
+
+        newTask.setId(oldTask.getId());
+        newTask.setTitle(oldTask.getTitle());
+        newTask.setDescription(oldTask.getDescription());
+        newTask.setStatus(oldTask.getStatus());
+        newTask.setDone(oldTask.isDone());
+        newTask.setCompleted(oldTask.isCompleted());
+        newTask.setErased(oldTask.isErased());
+        newTask.setTags(oldTask.getTags());
+        newTask.setCreatedAt(oldTask.getCreatedAt());
+        newTask.setUpdatedAt(LocalDateTime.now());
+        newTask.setErasedAt(oldTask.getErasedAt());
+        newTask.setDoneAt(oldTask.getDoneAt());
+
+        return newTask;
     }
 
     public List<TaskEntity> findByDescription(String description) {
@@ -54,140 +130,110 @@ public class SimpleTaskRepository implements SimpleRepository<TaskEntity> {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
+
         return results;
     }
 
+
     @Override
     public TaskEntity saveOrUpdate(TaskEntity task) {
-        TaskEntity taskFound = findById(task.getId());
+        findById(task.getId())
+                .map(this::update)
+                .orElseGet(() -> save(task));
 
-        EntityTransaction transaction = entityManager.getTransaction();
-        TaskEntity result = null;
-
-        try {
-            transaction.begin();
-            if (taskFound != null) {
-                taskFound.setId(task.getId());
-                taskFound.setTitle(task.getTitle());
-                taskFound.setDescription(task.getDescription());
-                taskFound.setStatus(task.getStatus());
-                taskFound.setDone(task.isDone());
-                taskFound.setCompleted(task.isCompleted());
-                taskFound.setErased(task.isErased());
-                taskFound.setTags(task.getTags());
-                taskFound.setCreatedAt(task.getCreatedAt());
-                taskFound.setUpdatedAt(LocalDateTime.now());
-                taskFound.setErasedAt(task.getErasedAt());
-                result = entityManager.merge(taskFound);
-            } else {
-                task.setStatus(Status.RUNNING);
-                task.setCreatedAt(LocalDateTime.now());
-                result = entityManager.merge(task);
-            }
-            transaction.commit();
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            if (transaction.isActive())
-                transaction.rollback();
-        } finally {
-            entityManager.close();
-        }
-
-        return result;
+        return task;
     }
 
     @Override
     public void deleteById(long id) {
-        TaskEntity taskFound = findById(id);
+        Optional<TaskEntity> taskFound = findById(id);
 
-        if (taskFound == null)
-            throw new IllegalArgumentException(String.format("task not found with given id: %d", id));
+        if (taskFound.isEmpty())
+            throw new IllegalArgumentException("task not found to be deleted");
 
         EntityTransaction transaction = entityManager.getTransaction();
 
+        TaskEntity taskToDeleteForever = taskFound.get();
+
         try {
             transaction.begin();
-            entityManager.remove(taskFound);
+            entityManager.remove(taskToDeleteForever);
             transaction.commit();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
     }
 
     public void markAsDone(long taskId) {
-        TaskEntity taskFound = findById(taskId);
+        Optional<TaskEntity> taskFound = findById(taskId);
 
-        if (taskFound == null)
-            throw new IllegalArgumentException(String.format("task not found with given id: %d", taskId));
+        if (taskFound.isEmpty())
+            throw new IllegalArgumentException("task not found to be marked as done");
 
         EntityTransaction transaction = entityManager.getTransaction();
 
+        TaskEntity taskToMarkAsDone = taskFound.get();
+
         try {
-            taskFound.setDone(true);
-            taskFound.setStatus(Status.DONE);
-            taskFound.setDoneAt(LocalDateTime.now());
-            saveOrUpdate(taskFound);
+            taskToMarkAsDone.setDone(true);
+            taskToMarkAsDone.setStatus(Status.DONE);
+            taskToMarkAsDone.setDoneAt(LocalDateTime.now());
+            saveOrUpdate(taskToMarkAsDone);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
     }
 
     public void markAsCompleted(long taskId) {
 
-        TaskEntity taskFound = findById(taskId);
+        Optional<TaskEntity> taskFound = findById(taskId);
 
-        if (taskFound == null)
-            throw new IllegalArgumentException(String.format("task not found with given id: %d", taskId));
+        if (taskFound.isEmpty())
+            throw new IllegalArgumentException("task not found to be marked as completed");
 
         EntityTransaction transaction = entityManager.getTransaction();
 
+        TaskEntity taskToMarkAsCompleted = taskFound.get();
+
         try {
-            taskFound.setCompleted(true);
-            taskFound.setStatus(Status.COMPLETED);
-            taskFound.setCompletedAt(LocalDateTime.now());
-            saveOrUpdate(taskFound);
+            taskToMarkAsCompleted.setCompleted(true);
+            taskToMarkAsCompleted.setStatus(Status.COMPLETED);
+            taskToMarkAsCompleted.setCompletedAt(LocalDateTime.now());
+
+            update(taskToMarkAsCompleted);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
     }
 
     @Override
-    public void eraseById(long id) {
-        TaskEntity taskFound = findById(id);
+    public void eraseById(long taskId) {
+        Optional<TaskEntity> optionalTask = findById(taskId);
 
-        if (taskFound == null) {
-            throw new IllegalArgumentException(String.format("task not found with given id: %d", id));
-        }
+        if (optionalTask.isEmpty())
+            throw new IllegalArgumentException("task not found to be marked as erased");
 
         EntityTransaction transaction = entityManager.getTransaction();
 
+        TaskEntity taskToMarkAsErased = optionalTask.get();
+
         try {
             transaction.begin();
-            taskFound.setErased(true);
-            taskFound.setErasedAt(LocalDateTime.now());
-            entityManager.merge(taskFound);
+            taskToMarkAsErased.setErased(true);
+            taskToMarkAsErased.setErasedAt(LocalDateTime.now());
+            entityManager.merge(taskToMarkAsErased);
             transaction.commit();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
     }
 
@@ -202,8 +248,6 @@ public class SimpleTaskRepository implements SimpleRepository<TaskEntity> {
             LOGGER.error(e.getMessage());
             if (transaction.isActive())
                 transaction.rollback();
-        } finally {
-            entityManager.close();
         }
     }
 }

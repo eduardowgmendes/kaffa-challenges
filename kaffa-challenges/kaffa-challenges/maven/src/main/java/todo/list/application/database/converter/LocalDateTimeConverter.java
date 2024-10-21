@@ -10,7 +10,7 @@ import java.util.Locale;
 @Converter(autoApply = true)
 public class LocalDateTimeConverter implements AttributeConverter<LocalDateTime, String> {
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(String.valueOf("yyyy-MM-dd HH:mm:ss"), Locale.getDefault());
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
 
     @Override
     public String convertToDatabaseColumn(LocalDateTime attribute) {

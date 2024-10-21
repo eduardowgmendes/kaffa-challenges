@@ -10,20 +10,20 @@ public class RectangleShapeIntersectionCalculatorTest {
     private final int[] rectangleC = {11, 11, 15, 13};
 
     @Test
-    public void rectanglesIntersects() {
+    public void shouldReturnTrue_whenRectanglesIntersect() {
         Assertions.assertTrue(new RectangleShapeIntersectionCalculator(rectangleA, rectangleB).intersects());
         Assertions.assertTrue(new RectangleShapeIntersectionCalculator(rectangleA, rectangleC).intersects());
     }
 
     @Test
-    public void rectanglesNotIntersects() {
+    public void shouldReturnFalse_whenRectanglesDoNotIntersect() {
         Assertions.assertFalse(new RectangleShapeIntersectionCalculator(rectangleB, rectangleC).intersects());
     }
 
     @Test
-    public void intersectionArea() {
-        Assertions.assertEquals(new RectangleShapeIntersectionCalculator(rectangleA, rectangleB).intersectionArea(), 15);
-        Assertions.assertEquals(new RectangleShapeIntersectionCalculator(rectangleA, rectangleC).intersectionArea(), 1);
-        Assertions.assertEquals(new RectangleShapeIntersectionCalculator(rectangleB, rectangleC).intersectionArea(), 0);
+    public void shouldCalculateCorrectIntersectionArea_whenRectanglesIntersects() {
+        Assertions.assertEquals(15, new RectangleShapeIntersectionCalculator(rectangleA, rectangleB).intersectionArea());
+        Assertions.assertEquals(1, new RectangleShapeIntersectionCalculator(rectangleA, rectangleC).intersectionArea());
+        Assertions.assertEquals(0, new RectangleShapeIntersectionCalculator(rectangleB, rectangleC).intersectionArea());
     }
 }

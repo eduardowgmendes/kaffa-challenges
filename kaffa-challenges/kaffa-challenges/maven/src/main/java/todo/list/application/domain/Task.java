@@ -25,7 +25,8 @@ public class Task {
     private LocalDateTime doneAt;
     private LocalDateTime completedAt;
 
-    public static Task create(TaskEntity taskEntity) {
+    public static Task from(TaskEntity taskEntity) {
+        if (taskEntity == null) return null;
         return new ModelMapper().map(taskEntity, Task.class);
     }
 
@@ -131,5 +132,37 @@ public class Task {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return id == task.id && done == task.done && completed == task.completed && erased == task.erased && Objects.equals(title, task.title) && Objects.equals(description, task.description) && status == task.status && Objects.equals(tags, task.tags) && Objects.equals(updatedAt, task.updatedAt) && Objects.equals(erasedAt, task.erasedAt) && Objects.equals(createdAt, task.createdAt) && Objects.equals(doneAt, task.doneAt) && Objects.equals(completedAt, task.completedAt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, description, status, done, completed, erased, tags, updatedAt, erasedAt, createdAt, doneAt, completedAt);
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                ", done=" + done +
+                ", completed=" + completed +
+                ", erased=" + erased +
+                ", tags=" + tags +
+                ", updatedAt=" + updatedAt +
+                ", erasedAt=" + erasedAt +
+                ", createdAt=" + createdAt +
+                ", doneAt=" + doneAt +
+                ", completedAt=" + completedAt +
+                '}';
     }
 }
