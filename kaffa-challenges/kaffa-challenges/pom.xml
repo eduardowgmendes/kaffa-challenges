@@ -10,8 +10,10 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>maven</module>
-        <module>spring</module>
+        <module>simple-todo-list</module>
+        <module>world-clock</module>
+        <module>document-validator</module>
+        <module>shape-calculator</module>
     </modules>
 
     <properties>
