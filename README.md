@@ -40,6 +40,7 @@
 
    - Java 21 or higher
    - Maven 3.9.6 or higher
+   - PostgreSQL 14.13 - Must to be installed
 
    
 
@@ -109,10 +110,10 @@ mvn exec:java -Dexec.mainClass="todo.list.application.ApplicationExecutor"
 
 To run the **WorldClockApplication**:
 
-1. Navigate to the **spring-module** directory:
+1. Navigate to the **world-clock** module directory:
 
    ```bash
-   cd spring
+   cd world-clock
    ```
 
 2. Compile and run:
