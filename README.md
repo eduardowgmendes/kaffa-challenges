@@ -9,14 +9,17 @@
    The **Maven Module** contains utility classes and a task listing application. Here are the main components:
 
    1. **document.format.validator.CNPJDocumentValidator**
+   [document.format.validator.CNPJDocumentValidator](https://github.com/eduardowgmendes/kaffa-challenges/blob/main/kaffa-challenges/kaffa-challenges/maven/src/main/java/document/format/validator/CNPJDocumentValidator.java)
       - This class validates whether the CNPJ (Cadastro Nacional da Pessoa Jurídica) is correctly formatted according to the rules of Brazil's Receita Federal.
       - The implemented algorithm checks the last two digits (the "check digits") of the CNPJ by performing weight calculations as required for CNPJ validation.
 
    2. **shapes.intersection.RectangleShapeIntersectionCalculator**
+   [shapes.intersection.RectangleShapeIntersectionCalculator](https://github.com/eduardowgmendes/kaffa-challenges/blob/main/kaffa-challenges/kaffa-challenges/maven/src/main/java/shapes/intersection/RectangleShapeIntersectionCalculator.java)
       - This class is responsible for calculating the intersection between two rectangles.
       - The presence of the `ShapeIntersectionCalculator` interface makes the system more flexible, allowing other geometric shapes to be checked for intersection by extending this interface and implementing the appropriate rules.
 
    3. **todo.list.application.ApplicationExecutor**
+   [todo.list.application.SimpleTodoListApplication](https://github.com/eduardowgmendes/kaffa-challenges/blob/main/kaffa-challenges/kaffa-challenges/maven/src/main/java/todo/list/application/SimpleTodoListApplication.java)
       - A task listing application (To-Do List) with a graphical interface built using Swing.
       - It allows users to create, list, and manage tasks. This application serves as an example of a simple desktop interface for task management.
 
