@@ -2,11 +2,13 @@ package todo.list.application.ui;
 
 import org.apache.commons.lang3.StringUtils;
 import todo.list.application.SimpleTodoListApplication;
+import todo.list.application.database.shared.entity.TaskEntity;
 import todo.list.application.database.shared.enums.Status;
 import todo.list.application.domain.Task;
 import todo.list.application.ui.models.TaskTableModel;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -37,7 +39,16 @@ public class ApplicationUI implements ActionListener {
     private List<Task> allTasks;
     private TaskTableModel tableModel;
 
-    private String[] columns = {"#", "Title", "Description", "Status", "Created At", "Updated At", "Erased At"};
+    private String[] columns = {
+            "#",
+            "Title",
+            "Description",
+            "Tags",
+            "Status",
+            "Updated At",
+            "Created At",
+            "Erased At",
+            "Done At"};
 
     public ApplicationUI(SimpleTodoListApplication application) {
         this.application = application;
@@ -55,7 +66,7 @@ public class ApplicationUI implements ActionListener {
         mainJFramePanel.setVisible(true);
         mainJFramePanel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainJFramePanel.setResizable(false);
-        mainJFramePanel.setSize(480, 320);
+        mainJFramePanel.setSize(640, 480);
     }
 
     private void setupDataInputPanel() {
@@ -86,6 +97,7 @@ public class ApplicationUI implements ActionListener {
         popupMenu = new JPopupMenu();
         addMenuItem(popupMenu, "Edit", this::editTask);
         addMenuItem(popupMenu, "Delete", this::deleteTask);
+        addMenuItem(popupMenu, "Mark as Running", this::markTaskAsRunning);
         addMenuItem(popupMenu, "Mark as Done", this::markTaskAsDone);
         addMenuItem(popupMenu, "Mark as Completed", this::markTaskAsCompleted);
         addMenuItem(popupMenu, "Mark as Erased", this::markTaskAsErased);
@@ -128,22 +140,27 @@ public class ApplicationUI implements ActionListener {
 
     private JPanel createDataInputPanel(JTextField taskTitleTextField, JTextArea taskDescriptionTextArea, JButton saveTaskButton) {
         JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(10, 16, 10, 16));
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
 
-        addToPanel(panel, taskTitleTextField, c, 0, 0, 1.0);
-        addToPanel(panel, taskDescriptionTextArea, c, 0, 1, 1.0);
-        addToPanel(panel, saveTaskButton, c, 0, 2, 1.0);
+        addToPanel(panel, taskTitleTextField, c, 0, 0, 1.0, 10, 10, new Insets(2, 2, 4, 2));
+        addToPanel(panel, taskDescriptionTextArea, c, 0, 1, 1.0, 48, 10, new Insets(2, 2, 16, 2));
+        addToPanel(panel, saveTaskButton, c, 0, 2, 1.0, 10, 10, new Insets(2, 2, 2, 2));
 
         return panel;
     }
 
-    private void addToPanel(JPanel panel, Component component, GridBagConstraints c, int x, int y, double weightx) {
-        c.gridx = x;
-        c.gridy = y;
-        c.weightx = weightx;
-        c.weighty = 1.0;
-        panel.add(component, c);
+    private void addToPanel(JPanel panel, Component component, GridBagConstraints gridBagConstraints, int x, int y, double weightx, int ipady, int ipadx, Insets insets) {
+        gridBagConstraints.gridx = x;
+        gridBagConstraints.gridy = y;
+        gridBagConstraints.weightx = weightx;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.ipady = ipady;
+        gridBagConstraints.ipadx = ipadx;
+        gridBagConstraints.insets = insets != null ? insets : new Insets(2, 2, 2, 2);
+
+        panel.add(component, gridBagConstraints);
     }
 
     private JPanel createTablePanel(JTable table) {
@@ -260,33 +277,99 @@ public class ApplicationUI implements ActionListener {
     private void markTaskAsDone(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsDone(allTasks.get(selectedRow).getId());
-            Task taskAsDone = tableModel.getTaskAt(selectedRow);
-            taskAsDone.setDone(true);
-            taskAsDone.setDoneAt(LocalDateTime.now());
-            tableModel.updateTaskAt(selectedRow, taskAsDone);
+            long taskId = allTasks.get(selectedRow).getId();
+            application.markAsDone(taskId);
+            Task taskFound = application.findById(taskId);
+            setDone(taskFound);
+            Task taskTableModel = tableModel.getTaskAt(selectedRow);
+            taskTableModel = exchangeData(taskFound, taskTableModel);
+
+            tableModel.updateTaskAt(selectedRow, taskTableModel);
         }
+    }
+
+    private static void setDone(Task taskFound) {
+        taskFound.setDone(true);
+        taskFound.setCompleted(false);
+        taskFound.setRunning(false);
+        taskFound.setStatus(Status.DONE);
+    }
+
+    private void markTaskAsRunning(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            long taskId = allTasks.get(selectedRow).getId();
+            application.markAsRunning(taskId);
+            Task taskFound = application.findById(taskId);
+            setRunning(taskFound);
+            Task taskTableModel = tableModel.getTaskAt(selectedRow);
+            taskTableModel = exchangeData(taskFound, taskTableModel);
+
+            tableModel.updateTaskAt(selectedRow, taskTableModel);
+        }
+    }
+
+    private static void setRunning(Task taskFound) {
+        taskFound.setRunning(true);
+        taskFound.setCompleted(false);
+        taskFound.setDone(false);
+        taskFound.setStatus(Status.RUNNING);
     }
 
     private void markTaskAsCompleted(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsCompleted(allTasks.get(selectedRow).getId());
-            Task taskAsCompleted = tableModel.getTaskAt(selectedRow);
-            taskAsCompleted.setStatus(Status.COMPLETED);
-            tableModel.updateTaskAt(selectedRow, taskAsCompleted);
+            long taskId = allTasks.get(selectedRow).getId();
+            application.markAsCompleted(taskId);
+            Task taskFound = application.findById(taskId);
+            setCompleted(taskFound);
+            Task taskTableModel = tableModel.getTaskAt(selectedRow);
+            taskTableModel = exchangeData(taskFound, taskTableModel);
+
+            tableModel.updateTaskAt(selectedRow, taskTableModel);
         }
+    }
+
+    private static void setCompleted(Task taskFound) {
+        taskFound.setCompleted(true);
+        taskFound.setDone(false);
+        taskFound.setRunning(false);
+        taskFound.setStatus(Status.COMPLETED);
     }
 
     private void markTaskAsErased(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsErased(allTasks.get(selectedRow).getId());
-            Task taskErased = tableModel.getTaskAt(selectedRow);
-            taskErased.setErased(true);
-            taskErased.setErasedAt(LocalDateTime.now());
-            tableModel.updateTaskAt(selectedRow, taskErased);
+            long taskId = allTasks.get(selectedRow).getId();
+            application.markAsErased(taskId);
+            Task taskFound = application.findById(taskId);
+            Task taskTableModel = tableModel.getTaskAt(selectedRow);
+            taskFound.setErased(true);
+            taskTableModel = exchangeData(taskFound, taskTableModel);
+
+            tableModel.updateTaskAt(selectedRow, taskTableModel);
         }
+    }
+
+    private Task exchangeData(Task source, Task target) {
+
+        if (source == null || target == null) return null;
+
+        target.setId(source.getId());
+        target.setTitle(source.getTitle());
+        target.setDescription(source.getDescription());
+        target.setStatus(source.getStatus());
+        target.setDone(source.isDone());
+        target.setCompleted(source.isCompleted());
+        target.setErased(source.isErased());
+        target.setTags(source.getTags());
+        target.setRunning(source.isRunning());
+        target.setCreatedAt(source.getCreatedAt());
+        target.setUpdatedAt(source.getCreatedAt());
+        target.setErasedAt(source.getErasedAt());
+        target.setDoneAt(source.getDoneAt());
+
+        return target;
     }
 
     @Override

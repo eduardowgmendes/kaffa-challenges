@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS public.tasks
     title CHARACTER VARYING(128) COLLATE pg_catalog."default" NOT NULL,
     description TEXT COLLATE pg_catalog."default",
     status CHARACTER VARYING(64) COLLATE pg_catalog."default" NOT NULL,
+    is_running BOOLEAN,
     is_done BOOLEAN,
     is_completed BOOLEAN,
     is_erased BOOLEAN,

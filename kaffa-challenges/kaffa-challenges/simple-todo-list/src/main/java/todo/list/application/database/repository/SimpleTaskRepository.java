@@ -97,24 +97,25 @@ public class SimpleTaskRepository implements SimpleCrudRepository<TaskEntity> {
         return task;
     }
 
-    private TaskEntity exchangeData(TaskEntity oldTask, TaskEntity newTask) {
+    private TaskEntity exchangeData(TaskEntity source, TaskEntity target) {
 
-        if (oldTask == null || newTask == null) return null;
+        if (source == null || target == null) return null;
 
-        newTask.setId(oldTask.getId());
-        newTask.setTitle(oldTask.getTitle());
-        newTask.setDescription(oldTask.getDescription());
-        newTask.setStatus(oldTask.getStatus());
-        newTask.setDone(oldTask.isDone());
-        newTask.setCompleted(oldTask.isCompleted());
-        newTask.setErased(oldTask.isErased());
-        newTask.setTags(oldTask.getTags());
-        newTask.setCreatedAt(oldTask.getCreatedAt());
-        newTask.setUpdatedAt(LocalDateTime.now());
-        newTask.setErasedAt(oldTask.getErasedAt());
-        newTask.setDoneAt(oldTask.getDoneAt());
+        target.setId(source.getId());
+        target.setTitle(source.getTitle());
+        target.setDescription(source.getDescription());
+        target.setStatus(source.getStatus());
+        target.setDone(source.isDone());
+        target.setCompleted(source.isCompleted());
+        target.setErased(source.isErased());
+        target.setTags(source.getTags());
+        target.setCreatedAt(source.getCreatedAt());
+        target.setRunning(source.isRunning());
+        target.setUpdatedAt(source.getUpdatedAt());
+        target.setErasedAt(source.getErasedAt());
+        target.setDoneAt(source.getDoneAt());
 
-        return newTask;
+        return target;
     }
 
     public List<TaskEntity> findByDescription(String description) {
@@ -167,18 +168,39 @@ public class SimpleTaskRepository implements SimpleCrudRepository<TaskEntity> {
         }
     }
 
-    public void markAsDone(long taskId) {
-        Optional<TaskEntity> taskFound = findById(taskId);
+    public void markAsRunning(long taskId) {
 
-        if (taskFound.isEmpty())
+        Optional<TaskEntity> optionalTask = findById(taskId);
+
+        if (optionalTask.isEmpty())
+            throw new IllegalArgumentException("task not found to be marked as running");
+
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        TaskEntity taskToMarkAsRunning = optionalTask.get();
+
+        try {
+            taskToMarkAsRunning.setRunning(true);
+            taskToMarkAsRunning.setDone(false);
+            taskToMarkAsRunning.setCompleted(false);
+        } catch (Exception e) {
+
+        }
+    }
+
+    public void markAsDone(long taskId) {
+        Optional<TaskEntity> optionalTask = findById(taskId);
+
+        if (optionalTask.isEmpty())
             throw new IllegalArgumentException("task not found to be marked as done");
 
         EntityTransaction transaction = entityManager.getTransaction();
 
-        TaskEntity taskToMarkAsDone = taskFound.get();
+        TaskEntity taskToMarkAsDone = optionalTask.get();
 
         try {
             taskToMarkAsDone.setDone(true);
+            taskToMarkAsDone.setCompleted(false);
             taskToMarkAsDone.setStatus(Status.DONE);
             taskToMarkAsDone.setDoneAt(LocalDateTime.now());
             saveOrUpdate(taskToMarkAsDone);
@@ -202,6 +224,7 @@ public class SimpleTaskRepository implements SimpleCrudRepository<TaskEntity> {
 
         try {
             taskToMarkAsCompleted.setCompleted(true);
+            taskToMarkAsCompleted.setDone(false);
             taskToMarkAsCompleted.setStatus(Status.COMPLETED);
             taskToMarkAsCompleted.setCompletedAt(LocalDateTime.now());
 
@@ -250,4 +273,5 @@ public class SimpleTaskRepository implements SimpleCrudRepository<TaskEntity> {
                 transaction.rollback();
         }
     }
+
 }

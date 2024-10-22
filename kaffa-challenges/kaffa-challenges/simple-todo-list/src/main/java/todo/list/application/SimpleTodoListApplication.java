@@ -62,6 +62,10 @@ public class SimpleTodoListApplication implements BasicPersistentDataApplication
         simpleTaskRepository.clear();
     }
 
+    public void markAsRunning(long taskId){
+      simpleTaskRepository.markAsRunning(taskId);
+    }
+
     public void markAsDone(long taskId) {
         simpleTaskRepository.markAsDone(taskId);
     }

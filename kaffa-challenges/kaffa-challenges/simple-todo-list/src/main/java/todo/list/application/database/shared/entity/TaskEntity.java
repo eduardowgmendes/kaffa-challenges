@@ -46,6 +46,9 @@ public class TaskEntity {
     @Column(name = "is_erased", nullable = false)
     private boolean erased;
 
+    @Column(name = "is_running", nullable = false)
+    private boolean running;
+
     @ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "tags", joinColumns = @JoinColumn(name = "task_id"))
     @Column(name = "tag", nullable = false)
@@ -189,17 +192,21 @@ public class TaskEntity {
         this.completedAt = completedAt;
     }
 
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TaskEntity that = (TaskEntity) o;
-        return id == that.id && done == that.done && completed == that.completed && erased == that.erased && Objects.equals(title, that.title) && Objects.equals(description, that.description) && status == that.status && Objects.equals(tags, that.tags) && Objects.equals(createdAt, that.createdAt) && Objects.equals(updatedAt, that.updatedAt) && Objects.equals(erasedAt, that.erasedAt) && Objects.equals(doneAt, that.doneAt) && Objects.equals(completedAt, that.completedAt);
+        return id == that.id && done == that.done && completed == that.completed && erased == that.erased && running == that.running && Objects.equals(title, that.title) && Objects.equals(description, that.description) && status == that.status && Objects.equals(tags, that.tags) && Objects.equals(createdAt, that.createdAt) && Objects.equals(updatedAt, that.updatedAt) && Objects.equals(erasedAt, that.erasedAt) && Objects.equals(doneAt, that.doneAt) && Objects.equals(completedAt, that.completedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, description, status, done, completed, erased, tags, createdAt, updatedAt, erasedAt, doneAt, completedAt);
+        return Objects.hash(id, title, description, status, done, completed, erased, running, tags, createdAt, updatedAt, erasedAt, doneAt, completedAt);
     }
 
     @Override
@@ -212,6 +219,7 @@ public class TaskEntity {
                 ", done=" + done +
                 ", completed=" + completed +
                 ", erased=" + erased +
+                ", running=" + running +
                 ", tags=" + tags +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

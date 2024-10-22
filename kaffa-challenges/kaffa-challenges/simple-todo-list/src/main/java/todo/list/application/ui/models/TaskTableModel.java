@@ -41,10 +41,12 @@ public class TaskTableModel extends AbstractTableModel {
             case 0 -> task.getId();
             case 1 -> task.getTitle();
             case 2 -> task.getDescription();
-            case 3 -> task.getStatus().name();
-            case 4 -> task.getCreatedAt();
+            case 3 -> task.getTags();
+            case 4 -> task.getStatus().name();
             case 5 -> task.getUpdatedAt();
-            case 6 -> task.getErasedAt();
+            case 6 -> task.getCreatedAt();
+            case 7 -> task.getErasedAt();
+            case 8 -> task.getDoneAt();
             default -> null;
         };
     }

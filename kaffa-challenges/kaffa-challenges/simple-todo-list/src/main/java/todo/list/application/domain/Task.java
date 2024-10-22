@@ -18,6 +18,7 @@ public class Task {
     private boolean done;
     private boolean completed;
     private boolean erased;
+    private boolean running;
     private List<String> tags = new ArrayList<>();
     private LocalDateTime updatedAt;
     private LocalDateTime erasedAt;
@@ -63,7 +64,7 @@ public class Task {
     }
 
     public boolean isDone() {
-        return done;
+        return this.done;
     }
 
     public void setDone(boolean done) {
@@ -71,7 +72,7 @@ public class Task {
     }
 
     public boolean isCompleted() {
-        return completed;
+        return this.completed;
     }
 
     public void setCompleted(boolean completed) {
@@ -134,17 +135,25 @@ public class Task {
         this.completedAt = completedAt;
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id && done == task.done && completed == task.completed && erased == task.erased && Objects.equals(title, task.title) && Objects.equals(description, task.description) && status == task.status && Objects.equals(tags, task.tags) && Objects.equals(updatedAt, task.updatedAt) && Objects.equals(erasedAt, task.erasedAt) && Objects.equals(createdAt, task.createdAt) && Objects.equals(doneAt, task.doneAt) && Objects.equals(completedAt, task.completedAt);
+        return id == task.id && done == task.done && completed == task.completed && erased == task.erased && running == task.running && Objects.equals(title, task.title) && Objects.equals(description, task.description) && status == task.status && Objects.equals(tags, task.tags) && Objects.equals(updatedAt, task.updatedAt) && Objects.equals(erasedAt, task.erasedAt) && Objects.equals(createdAt, task.createdAt) && Objects.equals(doneAt, task.doneAt) && Objects.equals(completedAt, task.completedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, description, status, done, completed, erased, tags, updatedAt, erasedAt, createdAt, doneAt, completedAt);
+        return Objects.hash(id, title, description, status, done, completed, erased, running, tags, updatedAt, erasedAt, createdAt, doneAt, completedAt);
     }
 
     @Override
@@ -157,6 +166,7 @@ public class Task {
                 ", done=" + done +
                 ", completed=" + completed +
                 ", erased=" + erased +
+                ", running=" + running +
                 ", tags=" + tags +
                 ", updatedAt=" + updatedAt +
                 ", erasedAt=" + erasedAt +

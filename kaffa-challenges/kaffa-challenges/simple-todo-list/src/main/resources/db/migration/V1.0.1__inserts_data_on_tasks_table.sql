@@ -1,16 +1,16 @@
-INSERT INTO tasks (title, description, status, is_done, is_completed, is_erased, updated_at, erased_at, created_at, done_at, completed_at)
+INSERT INTO tasks (title, description, status, is_running, is_done, is_completed, is_erased, updated_at, erased_at, created_at, done_at, completed_at)
 VALUES
-('Buy tomatoes for pasta', 'Get fresh tomatoes to make a delicious macaroni.', 'RUNNING', false, false, false, '2024-10-19T12:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
-('Purchase guitar strings for Jack', 'Buy new guitar strings for Jack''s upcoming concert.', 'DONE', true, true, false, '2024-10-18T15:30:00', NULL, '2024-10-18T09:00:00', '2024-10-18T15:00:00', '2024-10-18T15:30:00'),
-('Finish reading the new novel', 'Read the latest novel that just got released.', 'COMPLETED', true, true, false, '2024-10-19T14:00:00', NULL, '2024-10-17T11:00:00', '2024-10-19T13:00:00', '2024-10-19T14:00:00'),
-('Clean the house', 'Do a thorough cleaning of the entire house this weekend.', 'RUNNING', false, false, false, '2024-10-19T09:00:00', NULL, '2024-10-17T16:00:00', NULL, NULL),
-('Prepare for the job interview', 'Study and prepare answers for common interview questions.', 'RUNNING', false, false, false, '2024-10-19T08:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
-('Submit the project report', 'Complete and submit the final project report by the deadline.', 'COMPLETED', true, true, false, '2024-10-19T13:00:00', NULL, '2024-10-16T10:00:00', '2024-10-18T12:00:00', '2024-10-19T13:00:00'),
-('Grocery shopping for the week', 'Buy all necessary groceries for the week.', 'RUNNING', false, false, false, '2024-10-19T11:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
-('Organize the workspace', 'Declutter and organize the home office workspace.', 'DONE', true, true, false, '2024-10-18T15:30:00', NULL, '2024-10-17T12:00:00', '2024-10-18T15:00:00', '2024-10-18T15:30:00'),
-('Plan the weekend trip', 'Plan and finalize details for the weekend trip.', 'RUNNING', false, false, false, '2024-10-19T10:00:00', NULL, '2024-10-18T09:00:00', NULL, NULL),
-('Watch the new movie release', 'Enjoy the new movie that just got released in theaters.', 'COMPLETED', true, true, false, '2024-10-19T14:00:00', NULL, '2024-10-17T11:00:00', '2024-10-19T13:00:00', '2024-10-19T14:00:00'),
-('Visit the dentist', 'Make an appointment to see the dentist for a checkup.', 'RUNNING', false, false, false, '2024-10-19T09:30:00', NULL, '2024-10-18T08:00:00', NULL, NULL);
+('Buy tomatoes for pasta', 'Get fresh tomatoes to make a delicious macaroni.', 'RUNNING', true, false, false, false, '2024-10-19T12:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
+('Purchase guitar strings for Jack', 'Buy new guitar strings for Jack''s upcoming concert.', 'DONE', false, true, false, false, '2024-10-18T15:30:00', NULL, '2024-10-18T09:00:00', '2024-10-18T15:00:00', '2024-10-18T15:30:00'),
+('Finish reading the new novel', 'Read the latest novel that just got released.', 'COMPLETED', false, false, true, false, '2024-10-19T14:00:00', NULL, '2024-10-17T11:00:00', '2024-10-19T13:00:00', '2024-10-19T14:00:00'),
+('Clean the house', 'Do a thorough cleaning of the entire house this weekend.', 'RUNNING', true, false, false, false, '2024-10-19T09:00:00', NULL, '2024-10-17T16:00:00', NULL, NULL),
+('Prepare for the job interview', 'Study and prepare answers for common interview questions.', 'RUNNING', true, false, false, false, '2024-10-19T08:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
+('Submit the project report', 'Complete and submit the final project report by the deadline.', 'COMPLETED', false, false, true, false, '2024-10-19T13:00:00', NULL, '2024-10-16T10:00:00', '2024-10-18T12:00:00', '2024-10-19T13:00:00'),
+('Grocery shopping for the week', 'Buy all necessary groceries for the week.', 'RUNNING', true, false, false, false, '2024-10-19T11:00:00', NULL, '2024-10-18T10:00:00', NULL, NULL),
+('Organize the workspace', 'Declutter and organize the home office workspace.', 'DONE', false, true, false, false, '2024-10-18T15:30:00', NULL, '2024-10-17T12:00:00', '2024-10-18T15:00:00', '2024-10-18T15:30:00'),
+('Plan the weekend trip', 'Plan and finalize details for the weekend trip.', 'RUNNING', true, false, false, false, '2024-10-19T10:00:00', NULL, '2024-10-18T09:00:00', NULL, NULL),
+('Watch the new movie release', 'Enjoy the new movie that just got released in theaters.', 'COMPLETED', false, false, true, false, '2024-10-19T14:00:00', NULL, '2024-10-17T11:00:00', '2024-10-19T13:00:00', '2024-10-19T14:00:00'),
+('Visit the dentist', 'Make an appointment to see the dentist for a checkup.', 'RUNNING', true, false, false, false, '2024-10-19T09:30:00', NULL, '2024-10-18T08:00:00', NULL, NULL);
 
 INSERT INTO tags (task_id, tag) VALUES (1, 'grocery');
 INSERT INTO tags (task_id, tag) VALUES (1, 'vegetables');
