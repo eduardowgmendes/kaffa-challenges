@@ -1,44 +1,39 @@
 package todo.list.application.ui;
 
-import jakarta.validation.constraints.PastOrPresent;
+import org.apache.commons.lang3.StringUtils;
 import todo.list.application.SimpleTodoListApplication;
+import todo.list.application.database.shared.enums.Status;
 import todo.list.application.domain.Task;
 import todo.list.application.ui.models.TaskTableModel;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static java.lang.String.valueOf;
 import static todo.list.application.utils.ApplicationUtils.APPLICATION_NAME;
 import static todo.list.application.utils.ApplicationUtils.APPLICATION_VERSION_CODE;
 
 public class ApplicationUI implements ActionListener {
 
     private final SimpleTodoListApplication application;
-
     private JFrame mainJFramePanel;
     private JTextField taskTitleTextField;
     private JTextArea taskDescriptionTextArea;
     private JButton saveTaskButton;
     private JTable tasksHistoryTable;
-    private JScrollPane scrollPane;
     private JPopupMenu popupMenu;
 
-    private List<Task> all;
+    private JTextField optionPaneTaskTitleTextField = new JTextField(10);
+    private JTextArea optionPaneTaskTitleTextArea = new JTextArea(5, 10);
+    private JComboBox<Status> taskStatusComboBox = new JComboBox<>(Status.values());
 
+    private List<Task> all;
     private TaskTableModel tableModel;
 
     public ApplicationUI(SimpleTodoListApplication application) {
@@ -47,198 +42,225 @@ public class ApplicationUI implements ActionListener {
     }
 
     public void initialize() {
+        setupMainFrame();
+        setupDataInputPanel();
+        loadTaskHistoryTable();
+    }
+
+    private void setupMainFrame() {
+        mainJFramePanel = new JFrame(String.format("%s %s", APPLICATION_NAME, APPLICATION_VERSION_CODE));
+        mainJFramePanel.setVisible(true);
+        mainJFramePanel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainJFramePanel.setResizable(false);
+        mainJFramePanel.setSize(480, 320);
+    }
+
+    private void setupDataInputPanel() {
         taskTitleTextField = new JTextField("Title");
         taskDescriptionTextArea = new JTextArea("Description");
 
         saveTaskButton = new JButton("Save Task");
         saveTaskButton.addActionListener(this);
 
-        mainJFramePanel = new JFrame(String.format("%s %s", APPLICATION_NAME, APPLICATION_VERSION_CODE));
-        mainJFramePanel.setVisible(true);
-        mainJFramePanel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainJFramePanel.setResizable(false);
-        mainJFramePanel.setSize(480, 320);
-
         JPanel dataInputPanel = createDataInputPanel(taskTitleTextField, taskDescriptionTextArea, saveTaskButton);
         mainJFramePanel.add(dataInputPanel, BorderLayout.NORTH);
+    }
 
+    private void loadTaskHistoryTable() {
         this.all = application.all();
-
         if (all != null) {
-            popupMenu = new JPopupMenu();
-
-            JMenuItem edit = new JMenuItem("Edit");
-            JMenuItem delete = new JMenuItem("Delete");
-            JMenuItem markAsDone = new JMenuItem("Mark as Done");
-            JMenuItem markAsCompleted = new JMenuItem("Mark as Completed");
-            JMenuItem markAsErased = new JMenuItem("Mark as Erased");
-
-            popupMenu.add(edit);
-            popupMenu.add(delete);
-            popupMenu.add(markAsDone);
-            popupMenu.add(markAsCompleted);
-            popupMenu.add(markAsErased);
-
+            setupPopupMenu();
             tasksHistoryTable = loadTable(all);
             JPanel tablePanel = createTablePanel(tasksHistoryTable);
             mainJFramePanel.add(new JScrollPane(tablePanel));
 
-            tasksHistoryTable.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    if (SwingUtilities.isRightMouseButton(e)) {
-                        int row = tasksHistoryTable.rowAtPoint(e.getPoint());
-                        int column = tasksHistoryTable.columnAtPoint(e.getPoint());
-
-                        if (row != -1 && column != -1) {
-                            tasksHistoryTable.setRowSelectionInterval(row, row);
-                            popupMenu.show(tasksHistoryTable, e.getX(), e.getY());
-                        }
-                    }
-                }
-            });
-
-            tasksHistoryTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    int selectedRow = tasksHistoryTable.getSelectedRow();
-                    if (!e.getValueIsAdjusting()) {
-                        if (selectedRow != -1) {
-                            Task selectedTask = tableModel.getTaskAt(selectedRow);
-                            System.out.println(selectedTask);
-                        }
-                    }
-                }
-            });
-
-            delete.addActionListener(e -> {
-                int selectedRow = tasksHistoryTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    int result = JOptionPane.showConfirmDialog(mainJFramePanel, "Are you sure? This action cannot be undone.");
-                    if (result == JOptionPane.OK_OPTION) {
-                        Task taskAt = tableModel.getTaskAt(selectedRow);
-                        application.deleteById(taskAt.getId());
-                        tableModel.deleteTaskAt(selectedRow);
-                    }
-                }
-            });
-
-            edit.addActionListener(e -> {
-                int selectedRow = tasksHistoryTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    JOptionPane.showInputDialog(mainJFramePanel, "Type the new information");
-                }
-            });
-
-            markAsDone.addActionListener(e -> {
-                int selectedRow = tasksHistoryTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    int result = JOptionPane.showConfirmDialog(mainJFramePanel, "Mark as Done?");
-                    if (result == JOptionPane.OK_OPTION) {
-                        Task taskAt = tableModel.getTaskAt(selectedRow);
-                        application.markAsDone(taskAt.getId());
-                        taskAt.setDone(true);
-                    }
-                }
-            });
-
-            markAsCompleted.addActionListener(e -> {
-                int selectedRow = tasksHistoryTable.getSelectedRow();
-                int result = JOptionPane.showConfirmDialog(mainJFramePanel, "Mark as Completed?");
-                if (result == JOptionPane.OK_OPTION) {
-                    application.markAsCompleted(all.get(selectedRow).getId());
-                }
-            });
-
-            markAsErased.addActionListener(e -> {
-                int selectedRow = tasksHistoryTable.getSelectedRow();
-                int result = JOptionPane.showConfirmDialog(mainJFramePanel, "Mark as Erased?");
-                if (result == JOptionPane.OK_OPTION) {
-                    application.markAsErased(all.get(selectedRow).getId());
-                }
-            });
+            addTableListeners();
         } else {
-            JPanel infoPanel = new JPanel();
-            infoPanel.setLayout(new GridBagLayout());
-            infoPanel.add(new JLabel("No tasks were found!"));
-            mainJFramePanel.add(infoPanel, BorderLayout.CENTER);
+            displayNoTasksMessage();
         }
     }
 
-    private JPanel createTablePanel(JTable tasksHistoryTable) {
-        JPanel tablePanel = new JPanel();
-        JScrollPane scrollPane = new JScrollPane(tasksHistoryTable);
+    private void setupPopupMenu() {
+        popupMenu = new JPopupMenu();
+        addMenuItem(popupMenu, "Edit", this::editTask);
+        addMenuItem(popupMenu, "Delete", this::deleteTask);
+        addMenuItem(popupMenu, "Mark as Done", this::markTaskAsDone);
+        addMenuItem(popupMenu, "Mark as Completed", this::markTaskAsCompleted);
+        addMenuItem(popupMenu, "Mark as Erased", this::markTaskAsErased);
+    }
 
-        tablePanel.setLayout(new GridBagLayout());
-        GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
+    private void addMenuItem(JPopupMenu menu, String label, ActionListener action) {
+        JMenuItem item = new JMenuItem(label);
+        item.addActionListener(action);
+        menu.add(item);
+    }
 
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
+    private void addTableListeners() {
+        tasksHistoryTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    int row = tasksHistoryTable.rowAtPoint(e.getPoint());
+                    tasksHistoryTable.setRowSelectionInterval(row, row);
+                    popupMenu.show(tasksHistoryTable, e.getX(), e.getY());
+                }
+            }
+        });
 
-        tablePanel.add(scrollPane, gridBagConstraints);
+        tasksHistoryTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting() && tasksHistoryTable.getSelectedRow() != -1) {
+                    Task selectedTask = tableModel.getTaskAt(tasksHistoryTable.getSelectedRow());
+                    System.out.println(selectedTask);
+                }
+            }
+        });
+    }
 
-        return tablePanel;
+    private void displayNoTasksMessage() {
+        JPanel infoPanel = new JPanel(new GridBagLayout());
+        infoPanel.add(new JLabel("No tasks were found!"));
+        mainJFramePanel.add(infoPanel, BorderLayout.CENTER);
     }
 
     private JPanel createDataInputPanel(JTextField taskTitleTextField, JTextArea taskDescriptionTextArea, JButton saveTaskButton) {
-        JPanel dataInputPanel = new JPanel();
-        dataInputPanel.setLayout(new GridBagLayout());
-        GridBagConstraints layoutConstraints = new GridBagConstraints();
-        layoutConstraints.fill = GridBagConstraints.BOTH;
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
 
-        layoutConstraints.gridx = 0;
-        layoutConstraints.gridy = 0;
-        layoutConstraints.weightx = 1.0;
-        dataInputPanel.add(taskTitleTextField, layoutConstraints);
+        addToPanel(panel, taskTitleTextField, c, 0, 0, 1.0);
+        addToPanel(panel, taskDescriptionTextArea, c, 0, 1, 1.0);
+        addToPanel(panel, saveTaskButton, c, 0, 2, 1.0);
 
-        layoutConstraints.gridx = 0;
-        layoutConstraints.gridy = 1;
-        layoutConstraints.weightx = 1.0;
-        layoutConstraints.weighty = 1.0;
-        dataInputPanel.add(taskDescriptionTextArea, layoutConstraints);
+        return panel;
+    }
 
-        layoutConstraints.gridx = 0;
-        layoutConstraints.gridy = 2;
-        layoutConstraints.weightx = 1.0;
-        dataInputPanel.add(saveTaskButton, layoutConstraints);
+    private void addToPanel(JPanel panel, Component component, GridBagConstraints c, int x, int y, double weightx) {
+        c.gridx = x;
+        c.gridy = y;
+        c.weightx = weightx;
+        c.weighty = 1.0;
+        panel.add(component, c);
+    }
 
-        return dataInputPanel;
+    private JPanel createTablePanel(JTable table) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JScrollPane scrollPane = new JScrollPane(table);
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+
+        panel.add(scrollPane, c);
+        return panel;
     }
 
     private JTable loadTable(List<Task> tasks) {
-        String[] columns = createData("#", "Title", "Description", "Status", "Created At", "Updated At", "Erased At");
-        this.tableModel = new TaskTableModel(tasks, columns);
+        String[] columns = {"#", "Title", "Description", "Status", "Created At", "Updated At", "Erased At"};
+        tableModel = new TaskTableModel(tasks, columns);
         return new JTable(tableModel);
     }
 
-    private String emptyIfNull(String value) {
-        return value != null ? value : "";
+    private void editTask(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        Task taskToUpdate = tableModel.getTaskAt(selectedRow);
+
+        optionPaneTaskTitleTextField.setText(taskToUpdate.getTitle());
+        optionPaneTaskTitleTextArea.setText(taskToUpdate.getDescription());
+        taskStatusComboBox.setSelectedItem(taskToUpdate.getStatus());
+
+        JPanel editPanel = createEditPanel();
+
+        int result = JOptionPane.showConfirmDialog(mainJFramePanel, editPanel, "Edit Task", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            if (validateTaskInput(optionPaneTaskTitleTextField, optionPaneTaskTitleTextArea)) {
+                taskToUpdate.setTitle(optionPaneTaskTitleTextField.getText());
+                taskToUpdate.setDescription(optionPaneTaskTitleTextArea.getText());
+                taskToUpdate.setStatus((Status) taskStatusComboBox.getSelectedItem());
+
+                application.update(taskToUpdate);
+                tableModel.updateTaskAt(selectedRow, taskToUpdate);
+            }
+        }
     }
 
-    private String emptyIfUnknownDate(LocalDateTime timestamp) {
-        return timestamp != null ? timestamp.toString() : "";
+    private JPanel createEditPanel() {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        panel.add(new JLabel("Title:"));
+        panel.add(optionPaneTaskTitleTextField);
+        panel.add(new JLabel("Description:"));
+        panel.add(new JScrollPane(optionPaneTaskTitleTextArea));
+        panel.add(new JLabel("Status:"));
+        panel.add(taskStatusComboBox);
+        return panel;
     }
 
-    private String[] createData(String... columns) {
-        return columns;
+    private boolean validateTaskInput(JTextField taskTitleTextField, JTextArea taskDescriptionTextArea) {
+        if (StringUtils.isBlank(taskTitleTextField.getText())) {
+            JOptionPane.showMessageDialog(mainJFramePanel, "Task Title cannot be empty!");
+            return false;
+        }
+        if (StringUtils.isBlank(taskDescriptionTextArea.getText())) {
+            JOptionPane.showMessageDialog(mainJFramePanel, "Task Description cannot be empty!");
+            return false;
+        }
+        return true;
+    }
+
+    private void deleteTask(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        int result = JOptionPane.showConfirmDialog(mainJFramePanel, "Are you sure? This action cannot be undone.");
+        if (result == JOptionPane.OK_OPTION) {
+            Task task = tableModel.getTaskAt(selectedRow);
+            application.deleteById(task.getId());
+            tableModel.deleteTaskAt(selectedRow);
+        }
+    }
+
+    private void markTaskAsDone(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            application.markAsDone(all.get(selectedRow).getId());
+            tableModel.getTaskAt(selectedRow).setDone(true);
+        }
+    }
+
+    private void markTaskAsCompleted(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            application.markAsCompleted(all.get(selectedRow).getId());
+            tableModel.getTaskAt(selectedRow).setStatus(Status.COMPLETED);
+        }
+    }
+
+    private void markTaskAsErased(ActionEvent e) {
+        int selectedRow = tasksHistoryTable.getSelectedRow();
+        if (selectedRow != -1) {
+            application.markAsErased(all.get(selectedRow).getId());
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Task task = new Task();
-        String taskTitle = taskTitleTextField.getText();
-        String taskDescription = taskDescriptionTextArea.getText();
+        if (validateTaskInput(taskTitleTextField, taskDescriptionTextArea)) {
+            Task saveTask = new Task();
+            saveTask.setTitle(taskTitleTextField.getText());
+            saveTask.setDescription(taskDescriptionTextArea.getText());
+            Task task = application.create(saveTask);
+            tableModel.addTask(task);
+            resetForm();
+        }
+    }
 
-        if (!taskTitle.isEmpty())
-            task.setTitle(taskTitle);
-
-        if (!taskDescription.isEmpty())
-            task.setDescription(taskDescription);
-
-        Task taskCreated = application.create(task);
-        tableModel.addTask(taskCreated);
+    private void resetForm() {
+        taskTitleTextField.setText("");
+        taskDescriptionTextArea.setText("");
     }
 }
