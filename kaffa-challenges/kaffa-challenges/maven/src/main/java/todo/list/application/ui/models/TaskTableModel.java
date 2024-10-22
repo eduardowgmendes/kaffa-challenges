@@ -66,7 +66,7 @@ public class TaskTableModel extends AbstractTableModel {
 
     public void updateTaskAt(int rowIndex, Task task) {
         tasks.set(rowIndex, task);
-        fireTableRowsUpdated(tasks.size() - 1, tasks.size() - 1);
+        fireTableRowsUpdated(rowIndex, rowIndex);
     }
 
     public Task getTaskAt(int rowIndex) {

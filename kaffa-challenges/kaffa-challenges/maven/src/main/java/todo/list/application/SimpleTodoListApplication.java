@@ -32,13 +32,13 @@ public class SimpleTodoListApplication implements BasicPersistentDataApplication
     @Override
     public Task create(Task task) {
         Objects.requireNonNull(task, "task cannot be null");
-        return Task.from(simpleTaskRepository.saveOrUpdate(TaskEntity.from(task)));
+        return Task.from(simpleTaskRepository.save(TaskEntity.from(task)));
     }
 
     @Override
     public Task update(Task task) {
         Objects.requireNonNull(task, "task cannot be null");
-        return Task.from(simpleTaskRepository.saveOrUpdate(TaskEntity.from(task)));
+        return Task.from(simpleTaskRepository.update(TaskEntity.from(task)));
     }
 
     @Override
@@ -72,6 +72,12 @@ public class SimpleTodoListApplication implements BasicPersistentDataApplication
 
     public void markAsErased(long taskId) {
         simpleTaskRepository.eraseById(taskId);
+    }
+
+    public Task findById(long taskId) {
+        return simpleTaskRepository.findById(taskId)
+                .map(Task::from)
+                .orElse(null);
     }
 
 }

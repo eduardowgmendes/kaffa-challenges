@@ -18,7 +18,7 @@ ALTER SEQUENCE public.tasks_id_seq
 
 CREATE TABLE IF NOT EXISTS public.tasks
 (
-    id BIGINT NOT NULL DEFAULT nextval('tasks_id_seq'::regclass),
+    id BIGINT NOT NULL DEFAULT nextval('tasks_id_seq'),
     title CHARACTER VARYING(128) COLLATE pg_catalog."default" NOT NULL,
     description TEXT COLLATE pg_catalog."default",
     status CHARACTER VARYING(64) COLLATE pg_catalog."default" NOT NULL,

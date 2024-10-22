@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static todo.list.application.utils.ApplicationUtils.APPLICATION_NAME;
@@ -30,11 +31,13 @@ public class ApplicationUI implements ActionListener {
     private JPopupMenu popupMenu;
 
     private JTextField optionPaneTaskTitleTextField = new JTextField(10);
-    private JTextArea optionPaneTaskTitleTextArea = new JTextArea(5, 10);
+    private JTextArea optionPaneTaskTitleTextArea = new JTextArea(3, 10);
     private JComboBox<Status> taskStatusComboBox = new JComboBox<>(Status.values());
 
-    private List<Task> all;
+    private List<Task> allTasks;
     private TaskTableModel tableModel;
+
+    private String[] columns = {"#", "Title", "Description", "Status", "Created At", "Updated At", "Erased At"};
 
     public ApplicationUI(SimpleTodoListApplication application) {
         this.application = application;
@@ -67,13 +70,12 @@ public class ApplicationUI implements ActionListener {
     }
 
     private void loadTaskHistoryTable() {
-        this.all = application.all();
-        if (all != null) {
+        this.allTasks = application.all();
+        if (allTasks != null) {
             setupPopupMenu();
-            tasksHistoryTable = loadTable(all);
+            tasksHistoryTable = loadTable(columns, allTasks);
             JPanel tablePanel = createTablePanel(tasksHistoryTable);
             mainJFramePanel.add(new JScrollPane(tablePanel));
-
             addTableListeners();
         } else {
             displayNoTasksMessage();
@@ -157,8 +159,7 @@ public class ApplicationUI implements ActionListener {
         return panel;
     }
 
-    private JTable loadTable(List<Task> tasks) {
-        String[] columns = {"#", "Title", "Description", "Status", "Created At", "Updated At", "Erased At"};
+    private JTable loadTable(String[] columns, List<Task> tasks) {
         tableModel = new TaskTableModel(tasks, columns);
         return new JTable(tableModel);
     }
@@ -167,36 +168,68 @@ public class ApplicationUI implements ActionListener {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow == -1) return;
 
-        Task taskToUpdate = tableModel.getTaskAt(selectedRow);
+        long taskTableModelId = tableModel.getTaskAt(selectedRow).getId();
 
-        optionPaneTaskTitleTextField.setText(taskToUpdate.getTitle());
-        optionPaneTaskTitleTextArea.setText(taskToUpdate.getDescription());
-        taskStatusComboBox.setSelectedItem(taskToUpdate.getStatus());
+        Task taskFound = application.findById(taskTableModelId);
+
+        if (taskFound != null) {
+            optionPaneTaskTitleTextField.setText(taskFound.getTitle());
+            optionPaneTaskTitleTextArea.setText(taskFound.getDescription());
+            taskStatusComboBox.setSelectedItem(taskFound.getStatus());
+        }
 
         JPanel editPanel = createEditPanel();
 
         int result = JOptionPane.showConfirmDialog(mainJFramePanel, editPanel, "Edit Task", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
-            if (validateTaskInput(optionPaneTaskTitleTextField, optionPaneTaskTitleTextArea)) {
-                taskToUpdate.setTitle(optionPaneTaskTitleTextField.getText());
-                taskToUpdate.setDescription(optionPaneTaskTitleTextArea.getText());
-                taskToUpdate.setStatus((Status) taskStatusComboBox.getSelectedItem());
+            if (taskFound != null && validateTaskInput(optionPaneTaskTitleTextField, optionPaneTaskTitleTextArea)) {
+                taskFound.setTitle(optionPaneTaskTitleTextField.getText());
+                taskFound.setDescription(optionPaneTaskTitleTextArea.getText());
+                taskFound.setStatus((Status) taskStatusComboBox.getSelectedItem());
 
-                application.update(taskToUpdate);
-                tableModel.updateTaskAt(selectedRow, taskToUpdate);
+                application.update(taskFound);
+                tableModel.updateTaskAt(selectedRow, taskFound);
             }
         }
     }
 
     private JPanel createEditPanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
-        panel.add(new JLabel("Title:"));
-        panel.add(optionPaneTaskTitleTextField);
-        panel.add(new JLabel("Description:"));
-        panel.add(new JScrollPane(optionPaneTaskTitleTextArea));
-        panel.add(new JLabel("Status:"));
-        panel.add(taskStatusComboBox);
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.ipady = 1;
+        gridBagConstraints.anchor = GridBagConstraints.LINE_START;
+        panel.add(new JLabel("Title:"), gridBagConstraints);
+
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        panel.add(optionPaneTaskTitleTextField, gridBagConstraints);
+
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = GridBagConstraints.NORTH;
+        panel.add(new JLabel("Description:"), gridBagConstraints);
+
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        panel.add(new JScrollPane(optionPaneTaskTitleTextArea), gridBagConstraints);
+
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = GridBagConstraints.CENTER;
+        panel.add(new JLabel("Status:"), gridBagConstraints);
+
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        panel.add(taskStatusComboBox, gridBagConstraints);
+
         return panel;
     }
 
@@ -227,23 +260,32 @@ public class ApplicationUI implements ActionListener {
     private void markTaskAsDone(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsDone(all.get(selectedRow).getId());
-            tableModel.getTaskAt(selectedRow).setDone(true);
+            application.markAsDone(allTasks.get(selectedRow).getId());
+            Task taskAsDone = tableModel.getTaskAt(selectedRow);
+            taskAsDone.setDone(true);
+            taskAsDone.setDoneAt(LocalDateTime.now());
+            tableModel.updateTaskAt(selectedRow, taskAsDone);
         }
     }
 
     private void markTaskAsCompleted(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsCompleted(all.get(selectedRow).getId());
-            tableModel.getTaskAt(selectedRow).setStatus(Status.COMPLETED);
+            application.markAsCompleted(allTasks.get(selectedRow).getId());
+            Task taskAsCompleted = tableModel.getTaskAt(selectedRow);
+            taskAsCompleted.setStatus(Status.COMPLETED);
+            tableModel.updateTaskAt(selectedRow, taskAsCompleted);
         }
     }
 
     private void markTaskAsErased(ActionEvent e) {
         int selectedRow = tasksHistoryTable.getSelectedRow();
         if (selectedRow != -1) {
-            application.markAsErased(all.get(selectedRow).getId());
+            application.markAsErased(allTasks.get(selectedRow).getId());
+            Task taskErased = tableModel.getTaskAt(selectedRow);
+            taskErased.setErased(true);
+            taskErased.setErasedAt(LocalDateTime.now());
+            tableModel.updateTaskAt(selectedRow, taskErased);
         }
     }
 
