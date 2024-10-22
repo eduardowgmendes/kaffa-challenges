@@ -130,5 +130,6 @@ The application will be available at `http://localhost:8080`.
 Tests can be executed with the following command:
 
 ```bash
+cd kaffa-challenges/kaffa-challenges/kaffa-challenges
 mvn test
 ```
